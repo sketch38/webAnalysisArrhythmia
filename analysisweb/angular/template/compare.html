@@ -1,0 +1,33 @@
+<div class="container-fluid">
+<div class="row" style="margin-right: 0px;">
+<div class="col-sm-12 col-md-12 col-lg-12">
+	<div class=" text-right compare-control-btn">
+		<div class="btn-group">
+		  	<button type="button" class="btn btn-default dropdown-toggle btn-sm" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">{{filename}} <span class="caret"></span></button>
+		  	<ul class="dropdown-menu">
+			    <li><a href="#!compare/samples-10seconds.csv">Record 100</a></li>
+			    <li><a href="#!compare/samples-1minute.csv">Record 101</a></li>
+			    <li><a href="#!compare/record210-1minutes.csv">Record 201</a></li>
+		  	</ul>
+		</div>
+		<div class="btn-group">
+		  	<button type="button" class="btn btn-default dropdown-toggle btn-sm disabled" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Select time <span class="caret"></span></button>
+		  	<ul class="dropdown-menu">
+			    <li><a href="#!">00:00-01:00</a></li>
+			    <li><a href="#!">02:00-03:00</a></li>
+		  	</ul>
+		</div>
+		<button type="button" class="btn btn-default btn-sm" data-ng-click="playGraph()">
+			<span class="glyphicon glyphicon-play" aria-hidden="true"></span> play
+		</button>
+		<button type="button" class="btn btn-default btn-sm" data-ng-click="stopGraph()">
+			<span class="glyphicon glyphicon-pause" aria-hidden="true"></span> pause
+		</button>
+	</div>
+</div>
+<div id="chartContainer" class="col-sm-12 col-md-12 col-lg-12"></div>
+<div id="chart2Container" class="col-sm-12 col-md-12 col-lg-12"></div>
+<div id="chartPeak" class="col-sm-12 col-md-12 col-lg-12"></div>
+<div ng-show="loading" class="show-graph text-center"><img src="images/loading.gif"></div>
+</div>
+</div>
