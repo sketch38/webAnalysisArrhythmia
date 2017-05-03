@@ -13,6 +13,10 @@ app.config(['$routeProvider','$httpProvider' ,function ($routeProvider,$httpProv
 			templateUrl:'angular/template/upload.html',
 			controller: 'uploadController'
 		})
+		.when('/demonstrate/:algorithm',{
+			templateUrl:'angular/template/demonstrate.html',
+			controller: 'demonstrateController'
+		})
 		.otherwise({
 			redirectTo:'/'
 		});

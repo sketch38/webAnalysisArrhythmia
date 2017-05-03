@@ -1,33 +1,91 @@
 <div class="container-fluid">
-<div class="row" style="margin-right: 0px;">
-<div class="col-sm-12 col-md-12 col-lg-12">
-	<div class=" text-right compare-control-btn">
-		<div class="btn-group">
-		  	<button type="button" class="btn btn-default dropdown-toggle btn-sm" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">{{filename}} <span class="caret"></span></button>
-		  	<ul class="dropdown-menu">
-			    <li><a href="#!compare/samples-10seconds.csv">Record 100</a></li>
-			    <li><a href="#!compare/samples-1minute.csv">Record 101</a></li>
-			    <li><a href="#!compare/record210-1minutes.csv">Record 201</a></li>
-		  	</ul>
+	<div ng-show="loading" class="show-graph text-center"><img src="images/loading.gif"></div>
+	<div class="row" style="margin-right: 0px;" ng-hide="loading">
+		<div class="col-sm-12 col-md-6 col-lg-6">
+			<div class="compare-title">
+				Original Graph
+			</div>
 		</div>
-		<div class="btn-group">
-		  	<button type="button" class="btn btn-default dropdown-toggle btn-sm disabled" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Select time <span class="caret"></span></button>
-		  	<ul class="dropdown-menu">
-			    <li><a href="#!">00:00-01:00</a></li>
-			    <li><a href="#!">02:00-03:00</a></li>
-		  	</ul>
+		<div class="col-sm-12 col-md-6 col-lg-6">
+			<div class=" text-right compare-control-btn">
+				<div class="btn-group">
+				  	<button type="button" class="btn btn-default dropdown-toggle btn-sm" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+				  		<span ng-hide="name">{{filename}}</span>
+			  			<span ng-show="name">{{name}}</span>
+				  		<span class="caret"></span>
+				  	</button>
+				  	<ul class="dropdown-menu">
+					    <li ng-repeat="record in records"><a ng-click="SelectTime(record.name)">{{record.name}}</a></li>
+				  	</ul>
+				</div>
+				<div class="btn-group">
+				  	<button type="button" class="btn btn-default dropdown-toggle btn-sm" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">{{recordtime}}:00 <span class="caret"></span></button>
+				  	<ul class="dropdown-menu">
+					    <li ng-repeat="time in times"><a ng-href="#!compare/{{time.name}}-{{time.time}}.csv">{{time.time}}:00</a></li>
+				  	</ul>
+				</div>
+				<button type="button" class="btn btn-default btn-sm" data-ng-click="playGraph()">
+					<span class="glyphicon glyphicon-play" aria-hidden="true"></span> play
+				</button>
+				<button type="button" class="btn btn-default btn-sm" data-ng-click="stopGraph()">
+					<span class="glyphicon glyphicon-pause" aria-hidden="true"></span> pause
+				</button>
+			</div>
 		</div>
-		<button type="button" class="btn btn-default btn-sm" data-ng-click="playGraph()">
-			<span class="glyphicon glyphicon-play" aria-hidden="true"></span> play
-		</button>
-		<button type="button" class="btn btn-default btn-sm" data-ng-click="stopGraph()">
-			<span class="glyphicon glyphicon-pause" aria-hidden="true"></span> pause
-		</button>
+		<div id="chartContainer" class="col-sm-12 col-md-12 col-lg-12 compare-chart"></div>
+		<div class="col-sm-12 col-md-6 col-lg-6">
+			<div class="compare-title compare-algoname">
+				Pan and Tompkins Algorithm
+			</div>
+		</div>
+		<div class="col-sm12 col-md-6 col-lg-6 compare-heartrate">
+				<div class="dark-green">
+					<h1 ng-class="{'dark-green': sinusNormal,'red':!sinusNormal}">{{heartratePan}}</h1>
+					<h5>heart rate:</h5>
+				</div>
+		</div>
+		<div id="chartPeak" class="col-sm-12 col-md-12 col-lg-12 compare-chart"></div>
+		<div class="col-sm-12 col-md-4 col-lg-4 compare-sinus col-md-offset-4 col-lg-offset-4">
+			<div class="text-center dark-green">
+				<h3 ng-class="{'dark-green': sinusNormal,'red':!sinusNormal}">{{sinus}}</h3>	
+			</div>
+		</div>
+	</div>
+	<div class="row" ng-hide="loading">
+		<div class="col-sm-12 col-md-5 col-lg-5">
+			<div class="table-responsive " style="padding-left: 40px;padding-top: 20px;">
+			  	<table class="table table-bordered">
+			  		<thead>
+		              	<tr>
+		                  <th>Annotation Time</th>
+		                  <th>Peak detect Time</th>
+		                  <th>Result</th>
+		                  <th>Note</th>
+		              	</tr>
+		            </thead>
+		            <tbody>
+		                <tr ng-repeat="table in tables">
+		                    <td>{{table.annotation}}</td>
+		                    <td>{{table.peak}}</td>
+		                    <td>{{table.result}}</td>
+		                    <td>{{table.note}}</td>
+		                </tr>
+		            </tbody>
+				</table>
+			</div>
+		</div>
+		<div class="col-sm-12 col-md-5 col-lg-5">
+			<div style="padding-left: 40px;padding-top: 20px;">
+				<div>True Positive : {{conclusion.TP}}</div>
+				<div>False Positive : {{conclusion.FP}}</div>
+				<div>False Negative : {{conclusion.FN}}</div>
+				<div>Accuracy : {{conclusion.accuracy}}</div>
+				<div>F1 Score : {{conclusion.F1}}</div>
+			</div>
+		</div>
 	</div>
 </div>
-<div id="chartContainer" class="col-sm-12 col-md-12 col-lg-12"></div>
-<div id="chart2Container" class="col-sm-12 col-md-12 col-lg-12"></div>
-<div id="chartPeak" class="col-sm-12 col-md-12 col-lg-12"></div>
-<div ng-show="loading" class="show-graph text-center"><img src="images/loading.gif"></div>
-</div>
-</div>
+<!-- <div class="row">
+	<div class="col-sm-12 col-md-2 col-lg-2"><div ng-repeat="annotation in annotations">{{annotation.Time}}</div></div>
+	<div class="col-sm-12 col-md-2 col-lg-2"><div ng-repeat="checkAccuracy in checkAccuracys">{{checkAccuracy.time}}</div></div>
+</div> -->

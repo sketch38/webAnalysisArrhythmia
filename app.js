@@ -1,16 +1,90 @@
 var express = require('express');
 var csv = require('csvtojson');
-var plotly = require('plotly')("SketchJI", "BdMDIQkQVpnzAZTYRvsS");
-
+var mysql = require('mysql');
+var fs = require('fs');
 var app = express();
 app.use(express.static('analysisweb'));
 
-// app.get('/draworiginalgraph',function(request,response){
-app.get('/drawgraph/:filename',function(request,response){
+var pool = mysql.createPool
+({
+    connectionLimit : 1000,
+    host     : 'localhost',
+    user     : 'root',
+    password : '',
+    database : 'fileECG'
+});
+app.get('/filerecord',function(request,response){
+	pool.getConnection(function(err, connection) {
+  		connection.query('SELECT `name` FROM `record` GROUP BY `name`', function (error, results) { 
+    		connection.release();
+    		if (error){
+    			response.json(error);
+    		} 
+    		else{
+    			response.json(results);
+    		}
+  		});
+	});
+});
+app.get('/timerecord/:namerecord',function(request,response){
+	var record = request.params.namerecord;
+	pool.getConnection(function(err, connection) {
+  		connection.query("SELECT `name`, `time` FROM `record` WHERE `name` = '" + record +"'", function (error, results) {
+    		connection.release();
+    		if (error){
+    			response.json(error);
+    		} 
+    		else{
+    			response.json(results);
+    		}
+  		});
+	});
+});
+
+function asyncWrap(fn) {  
+  return (request,response, next) => {
+    fn(request,response, next).catch(next);
+  };
+};
+app.get('/demonstratePan/:filename', asyncWrap(async (request,response) =>{
 	var file = request.params.filename;
 	var csvFilePath= 'analysisweb/file/' + file;
-	// var csvFilePath= 'analysisweb/file/samples-1minute.csv';
+	var arrayfile = [];
+	var mlii = [];
+	csv({
+	    noheader: true
+	})
+	.fromFile(csvFilePath)
+	.on('json',(jsonObj)=>{
+		arrayfile =	arrayfile.concat(jsonObj)
+	})
+	.on('done',(error)=>{
+		for(var i = 2; i < arrayfile.length; i++){
+	        mlii.push(arrayfile[i].field2);
+	    }
+	    var lwf = panLowPassFilter(mlii);
+	    var hpf = panHighPassFilter(lwf);
+	    var diff = panDerivative(hpf);
+	    var movingWindow = panMovingwindowand(diff);
+	    var diff2 = panRisingSlope(movingWindow);
+	    var peak = panthreshold(diff2);
+	    var jsonfile = [{
+			'original': arrayfile,
+			'bandpass': hpf,
+			'derivative':diff,
+			'movingwindow': movingWindow,
+			'risingslope':diff2,
+			'threshold': peak
+		}];
+	    response.json(jsonfile);
+	})
+}));
+
+app.get('/drawgraph/:filename', asyncWrap(async (request,response) =>{
+	var file = request.params.filename;
+	var csvFilePath= 'analysisweb/file/' + file;
 	var jsonfile = [];
+	var filetest = [];
 	csv({
 	    noheader: true
 	})
@@ -20,11 +94,37 @@ app.get('/drawgraph/:filename',function(request,response){
 	})
 	.on('done',(error)=>{
 		var result = panAndTompkins(jsonfile);
+		for(var i=0;i<result.length;i++){
+			var test = {
+				'time': jsonfile[i+2].field1,
+				'value': result[i]
+			};
+			filetest = filetest.concat(test);
+		}
 	    console.log('convert file original end');
-	    jsonfile =	jsonfile.concat(result)
+	    jsonfile =	jsonfile.concat(filetest);
 	    response.json(jsonfile);
 	})
-});
+}));
+app.get('/compare/:filename', asyncWrap(async (request,response) =>{
+	var file = request.params.filename;
+	var path = file.split(".");
+	var annotation = path[0];
+	var annotationfilePath = 'analysisweb/file/'+annotation+'.json'
+	fs.readFile(annotationfilePath, (err, data) => {
+	  	if (err) console.log(err);
+	  	obj = JSON.parse(data);
+	  	for(var i = 0; i < obj.length;i++){
+	  		if(obj[i].Num !== undefined){
+	  			obj.splice(i, 1);
+	  		}
+	  		if(obj[i].beat === 'x'){
+	  			obj.splice(i, 1);
+	  		}
+	  	}
+	  	response.json(obj);
+	});
+}));
 
 app.listen(4000,function(){
 	console.log('listening on 4000 \n')
@@ -43,7 +143,6 @@ function panAndTompkins(jsonfile){
     var diff2 = panRisingSlope(movingWindow);
     var peak = panthreshold(diff2);
     return peak;
-
 }
 function panLowPassFilter(x){
 	var y = [];
@@ -114,55 +213,49 @@ function panRisingSlope(x){
 }
 function panthreshold(x){
 	var y = [];
-	var location = [];
-	var peak = [];
 	var maxPeak = Math.max.apply(null, x);
 	var noise = averageNumber(x);
 
 	var threshold1 = (1/8)*maxPeak;
 	var threshold2 = (1/2)*threshold1;
-	var temp = 0;
-	var loc = 0;
-	var count = 0;
-	var countLoc = 0;
-
+	// var threshold2 = 120;
+	var skipPoint = false;
+	var count = 1;
+	var sildingWindow = 100;
+	console.log('maxPeak: '+maxPeak);
+	console.log('threshold: '+threshold1 +'   ' + threshold2);
 	for(var k = 0;k<x.length;k++){
 		if(x[k]<threshold2){
-			x[k] = 0;
+			x[k] = "0.0000";
 		}
 	}
-
-	for(var i = 0; i < x.length;i+=200){
-		temp = parseFloat(x[i]);
-		loc = i;
-		for (var j=0;j<200;j++){
-			if(parseFloat(x[i+j])>temp){
-				temp = x[i+j];
-				loc = i+j; 
+	console.log('lastx: '+x[x.length-1]);
+	for(var i=0;i<x.length;i++){
+		if(!skipPoint){
+			for(var j=i+1;j<i+sildingWindow-1;j++){
+				if(j>= x.length-1){
+					y[i]=0;
+					break;
+				}
+				if(parseFloat(x[i])<=parseFloat(x[j])){
+					y[i]=0;
+				}
 			}
-			else{
-				continue;
+			if(y[i]==undefined){
+				y[i] = 1;
+				skipPoint = true;
 			}
-		}
-		if(temp === 0){
-			continue;
 		}
 		else{
-			y[count] = temp;
-			location[count] = loc;
+			y[i] = 0;
+			if(count%49==0){
+				skipPoint = false;
+			}
 			count++;
-		}	
-	}
-	for(var l = 0;l<x.length;l++){
-		if(l === location[countLoc]){
-			peak[l] = 1;
-			countLoc++;
-		}
-		else{
-			peak[l]= 0;
 		}
 	}
-	return peak;
+	console.log('lasty: '+y[y.length-1]);
+	return y;
 }
 
 

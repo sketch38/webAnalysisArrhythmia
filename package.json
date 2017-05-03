@@ -1,0 +1,32 @@
+{
+  "name": "webanalysisarrhythmia",
+  "version": "1.0.0",
+  "description": "the project for subject 492.",
+  "main": "app.js",
+  "dependencies": {
+    "csvtojson": "^1.1.4",
+    "express": "^4.14.0",
+    "fs": "^0.0.1-security",
+    "mysql": "^2.13.0",
+    "plotly": "^1.0.6",
+    "smoothie": "^1.27.0",
+    "text-2-json": "^1.0.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sketch38/webAnalysisArrhythmia.git"
+  },
+  "keywords": [
+    "demo492"
+  ],
+  "author": "Sketchji <tanjiratchaya38@gmail.com>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/sketch38/webAnalysisArrhythmia/issues"
+  },
+  "homepage": "https://github.com/sketch38/webAnalysisArrhythmia#readme"
+}
