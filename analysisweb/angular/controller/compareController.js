@@ -43,25 +43,26 @@ angular.module('app')
 		//get data from node in compare function
 	  	$http({
 	  		method:'GET',
-	  		url:'/drawgraph/'+$routeParams.filename
+	  		url:'/drawgraph/'+$routeParams.filename+'/'+$routeParams.threshold
 	  	}).then(function (success){
 				//stop loading page
 				$scope.loading = false;
 
 				//create dataset by extract from data which send from nodejs
 				var timeseries = [], mlii = [],peak = [],setData = [],checkPeak =[];
-	            for(var i = 2; i <= (success.data.length/2); i++){
+	            for(var i = 2; i <= ((success.data.length-1)/2); i++){
 	                timeseries.push(success.data[i].field1);
 	                mlii.push(success.data[i].field2);
 	            }
-	            for(var j = (success.data.length/2)+1;j < success.data.length;j++ ){
+	            for(var j = ((success.data.length-1)/2)+1;j < success.data.length-1;j++ ){
 	                peak.push(success.data[j].value);
 	                if(success.data[j].value!=0){
 						checkPeak = checkPeak.concat(success.data[j]);
 					}
 	            }
+	            $scope.nowThreshold = success.data[success.data.length-1];
 	            $scope.checkAccuracys = checkPeak;
-
+	            console.log($scope.nowThreshold);
 	            var tempArray = [];
 	            var sum = 0;
 	            var temp = 0;
@@ -106,30 +107,9 @@ angular.module('app')
 						}
 	            	}
 				};
-	   //          var findHeartratePan = function(oldPeak,newPeak){
-				// 	if(oldPeak === 0){
-				// 		$scope.heartratePan = 0;
-				// 		$scope.sinus = '---';
-				// 		$scope.sinusNormal = true;
-				// 	}
-				// 	else{
-				// 		$scope.heartratePan = parseInt(60000/(timestringTotimemilisec(timeseries[newPeak])-timestringTotimemilisec(timeseries[oldPeak])));
-				// 		if($scope.heartratePan<60){
-				// 			$scope.sinus = 'SINUS BRADYCARDIA';
-				// 			$scope.sinusNormal = false;
-				// 		}
-				// 		else if($scope.heartratePan>100){
-				// 			$scope.sinus = 'SINUS TACHYCARDIA';
-				// 			$scope.sinusNormal = false;
-				// 		}
-				// 		else{
-				// 			$scope.sinus = 'NORMAL SINUS RHYTHM';
-				// 			$scope.sinusNormal = true;
-				// 		}
-				// 	}
-				// };
 				
 	            //show filename and time
+	            $scope.recordname = $routeParams.filename;
 	            var stringname = $routeParams.filename.split("-");
 	            $scope.filename = stringname[0];
 	            var stringtime = stringname[1].split(".");

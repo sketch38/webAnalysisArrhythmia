@@ -67,7 +67,8 @@ app.get('/demonstratePan/:filename', asyncWrap(async (request,response) =>{
 	    var diff = panDerivative(hpf);
 	    var movingWindow = panMovingwindowand(diff);
 	    var diff2 = panRisingSlope(movingWindow);
-	    var peak = panthreshold(diff2);
+	    var peak = panthreshold(diff2,'default');
+	    peak.shift();
 	    var jsonfile = [{
 			'original': arrayfile,
 			'bandpass': hpf,
@@ -80,7 +81,8 @@ app.get('/demonstratePan/:filename', asyncWrap(async (request,response) =>{
 	})
 }));
 
-app.get('/drawgraph/:filename', asyncWrap(async (request,response) =>{
+app.get('/drawgraph/:filename/:threshold', asyncWrap(async (request,response) =>{
+	var threshold = request.params.threshold;
 	var file = request.params.filename;
 	var csvFilePath= 'analysisweb/file/' + file;
 	var jsonfile = [];
@@ -93,7 +95,9 @@ app.get('/drawgraph/:filename', asyncWrap(async (request,response) =>{
 		jsonfile =	jsonfile.concat(jsonObj)
 	})
 	.on('done',(error)=>{
-		var result = panAndTompkins(jsonfile);
+		var result = panAndTompkins(jsonfile,threshold);
+		var nowThreshold = result[result.length-1];
+		result.shift();
 		for(var i=0;i<result.length;i++){
 			var test = {
 				'time': jsonfile[i+2].field1,
@@ -102,8 +106,12 @@ app.get('/drawgraph/:filename', asyncWrap(async (request,response) =>{
 			filetest = filetest.concat(test);
 		}
 	    console.log('convert file original end');
+
 	    jsonfile =	jsonfile.concat(filetest);
+	    jsonfile = jsonfile.concat(nowThreshold);
 	    response.json(jsonfile);
+	    // response.json(result);
+
 	})
 }));
 app.get('/compare/:filename', asyncWrap(async (request,response) =>{
@@ -130,7 +138,7 @@ app.listen(4000,function(){
 	console.log('listening on 4000 \n')
 });
 
-function panAndTompkins(jsonfile){
+function panAndTompkins(jsonfile,threshold){
 	var timeseries = [], mlii = [];
     for(var i = 2; i < jsonfile.length; i++){
         timeseries.push(jsonfile[i].field1);
@@ -141,7 +149,7 @@ function panAndTompkins(jsonfile){
     var diff = panDerivative(hpf);
     var movingWindow = panMovingwindowand(diff);
     var diff2 = panRisingSlope(movingWindow);
-    var peak = panthreshold(diff2);
+    var peak = panthreshold(diff2,threshold);
     return peak;
 }
 function panLowPassFilter(x){
@@ -211,25 +219,30 @@ function panRisingSlope(x){
 	}
 	return y;
 }
-function panthreshold(x){
+function panthreshold(x,numThreshold){
 	var y = [];
 	var maxPeak = Math.max.apply(null, x);
 	var noise = averageNumber(x);
-
 	var threshold1 = (1/8)*maxPeak;
-	var threshold2 = (1/2)*threshold1;
-	// var threshold2 = 120;
+	// var y = x;
+
+	if(numThreshold=='default'){
+		var threshold2 = (1/2)*threshold1;
+	}
+	else{
+		var threshold2 = numThreshold;
+	}
+	
 	var skipPoint = false;
 	var count = 1;
 	var sildingWindow = 100;
 	console.log('maxPeak: '+maxPeak);
 	console.log('threshold: '+threshold1 +'   ' + threshold2);
 	for(var k = 0;k<x.length;k++){
-		if(x[k]<threshold2){
+		if(parseFloat(x[k])<threshold2){
 			x[k] = "0.0000";
 		}
 	}
-	console.log('lastx: '+x[x.length-1]);
 	for(var i=0;i<x.length;i++){
 		if(!skipPoint){
 			for(var j=i+1;j<i+sildingWindow-1;j++){
@@ -254,7 +267,7 @@ function panthreshold(x){
 			count++;
 		}
 	}
-	console.log('lasty: '+y[y.length-1]);
+	y.push(threshold2);
 	return y;
 }
 

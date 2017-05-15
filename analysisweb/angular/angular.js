@@ -5,7 +5,7 @@ app.config(['$routeProvider','$httpProvider' ,function ($routeProvider,$httpProv
 			templateUrl:'angular/template/home.html',
 			controller: 'homeController'
 		})
-		.when('/compare/:filename',{
+		.when('/compare/:filename/:threshold',{
 			templateUrl:'angular/template/compare.html',
 			controller: 'compareController'
 		})

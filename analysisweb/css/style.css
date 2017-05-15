@@ -1,6 +1,11 @@
 body{
 	font-family: roboto;
 }
+.font-bold{
+	font-weight: bolder;
+	font-size: 18px;
+	font-style: italic;
+}
 .red{
 	color: red!important;
 }
@@ -36,7 +41,7 @@ body{
 	font-family: roboto;
 }
 .demon-text-title{
-	margin-top: 150px;
+	margin-top: 130px;
 	margin-bottom: 20px;
 }
 .demon-text-body{
@@ -47,10 +52,9 @@ body{
 	display: inline-block;
 	font-family: roboto;
 }
-/*.select-Algorithm a:hover{
-	color:#b5b5b5;
-}*/
-
+.demon-video{
+	padding: 50px 50px 50px 50px;
+}
 .demon-algorithm{
 	background-color: #fff;
 	width: 150px;
@@ -201,11 +205,12 @@ body{
 .demon-page-order p{
 	text-align: justify;
 	font-size: 12px;
-	padding-top: 50px;
+	padding-top: 10px;
+	padding-bottom: 5px;
 	color: #000;
 }
 .demon-page-order ul{
-	padding-top: 30px;
+	padding-top: 10px;
 	line-height: 28px;
 	color: #757575;
 	text-align: justify;
@@ -250,6 +255,16 @@ body{
 }
 .demon-page-chackbox-btn label{
 	margin: 0px 10px 0px 10px;
+}
+.demon-page-sub-list{
+	padding-top: 0px!important;
+}
+.demon-page-sub-list p,.demon-page-sub-equation{
+	font-weight: bold;
+}
+.demon-page-explain-img{
+	list-style: none;
+	font-size: 12px;
 }
 @media (min-width: 768px){
 	body { 
